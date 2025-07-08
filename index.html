@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TGDD Runner</title>
+  <style>
+    body { background: black; color: lime; font-family: monospace; font-size: 18px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div id="game">🎮 Bắt đầu đếm doanh thu...</div>
+  <script>
+    const items = ["📱 Điện thoại", "💻 Laptop", "🧊 Máy lạnh", "🎧 Tai nghe", "🚰 Máy lọc nước", "🌀 Quạt"];
+    let text = "";
+    setInterval(() => {
+      const item = items[Math.floor(Math.random() * items.length)];
+      text += "+ " + item + "<br>";
+      document.getElementById("game").innerHTML = text;
+    }, 500);
+  </script>
+</body>
+</html>
