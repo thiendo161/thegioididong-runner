@@ -1,22 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>TGDD Runner</title>
+  <title>TGDD Platformer</title>
   <style>
-    body { background: black; color: lime; font-family: monospace; font-size: 18px; padding: 20px; }
+    body { margin:0; background:#333; overflow:hidden; }
+    canvas { display:block; margin:auto; background:#87ceeb; }
   </style>
 </head>
 <body>
-  <div id="game">🎮 Bắt đầu đếm doanh thu...</div>
+  <canvas id="game" width="600" height="400"></canvas>
   <script>
-    const items = ["📱 Điện thoại", "💻 Laptop", "🧊 Máy lạnh", "🎧 Tai nghe", "🚰 Máy lọc nước", "🌀 Quạt"];
-    let text = "";
-    setInterval(() => {
-      const item = items[Math.floor(Math.random() * items.length)];
-      text += "+ " + item + "<br>";
-      document.getElementById("game").innerHTML = text;
-    }, 500);
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const keys = {};
+    document.addEventListener("keydown", e=>keys[e.key]=true);
+    document.addEventListener("keyup", e=>keys[e.key]=false);
+
+    // Game objects
+    const player = {x:50, y:300, w:40, h:60, vx:0, vy:0, speed:3, jump: -10, grounded:false};
+    const gravity = 0.5;
+    const platforms = [{x:0,y:360,w:600,h:40}, {x:150,y:280,w:100,h:20}, {x:350,y:220,w:100,h:20}];
+    const items = [];
+    const enemies = [{x:500,y:340,w:40,h:60}];
+    let score = 0, gameOver=false;
+
+    function spawnItem(){
+      const types=["📱","💻"," ❄️","🎧","🚰","🌀"];
+      items.push({x:600, y:Math.random()*200+100, emoji: types[Math.floor(Math.random()*types.length)]});
+    }
+    setInterval(spawnItem, 2000);
+
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Platform
+      ctx.fillStyle="#654321";
+      platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
+      // Player (pink)
+      ctx.fillStyle="#ff69b4";
+      ctx.fillRect(player.x,player.y,player.w,player.h);
+      // Hammer
+      ctx.fillStyle="gold";
+      ctx.fillRect(player.x+player.w, player.y+20, 10,10);
+      // Items
+      ctx.font="24px Arial";
+      items.forEach(item=>ctx.fillText(item.emoji, item.x, item.y));
+      // Enemies (customers)
+      ctx.fillStyle="red";
+      enemies.forEach(e=>ctx.fillRect(e.x,e.y,e.w,e.h));
+      // HUD
+      ctx.fillStyle="#fff";
+      ctx.fillText("Doanh thu: "+score+"đ",10,20);
+    }
+
+    function update(){
+      if(gameOver) return;
+      // Movement
+      if(keys["ArrowLeft"]) player.vx = -player.speed;
+      else if(keys["ArrowRight"]) player.vx = player.speed;
+      else player.vx = 0;
+      if(keys[" "] && player.grounded){
+        player.vy = player.jump;
+        player.grounded = false;
+      }
+      // Physics
+      player.vy += gravity;
+      player.x += player.vx;
+      player.y += player.vy;
+      player.grounded = false;
+      platforms.forEach(p=>{
+        if(player.x < p.x+p.w && player.x+player.w > p.x &&
+           player.y+player.h < p.y+20 && player.y+player.h > p.y){
+          player.y = p.y - player.h;
+          player.vy = 0;
+          player.grounded = true;
+        }
+      });
+      // Items overlay
+      items.forEach((it,i)=>{
+        it.x -=2;
+        if(player.x < it.x && it.x < player.x+player.w &&
+           player.y < it.y && it.y < player.y+player.h){
+          score += 10018000;
+          items.splice(i,1);
+        }
+      });
+      // Enemy collision
+      enemies.forEach((e,i)=>{
+        if(player.x < e.x+e.w && player.x+player.w > e.x &&
+           player.y < e.y+e.h && player.y+player.h > e.y){
+          alert("Bạn bị khách 'khó tính' bắt! Ca làm bị gián đoạn. Doanh thu: "+score+"đ");
+          gameOver = true;
+          document.location.reload();
+        }
+      });
+    }
+
+    function loop(){
+      update();
+      draw();
+      if(!gameOver) requestAnimationFrame(loop);
+    }
+
+    loop();
   </script>
 </body>
 </html>
